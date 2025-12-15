@@ -1,13 +1,30 @@
 from flask import Flask, Response
 import requests
+import os
+import time
+from threading import Lock
+from dotenv import load_dotenv
+load_dotenv()
 
 # PATH Train API
 TRAIN_URL = "https://www.panynj.gov/bin/portauthority/ridepath.json"
 
 # NJ Transit Bus API
 
-# Authentication URL 
+# Authentication 
 BUS_AUTH_URL = "https://pcsdata.njtransit.com/api/GTFSRT/authenticateUser"
+
+username = os.environ.get("NJT_USERNAME")
+password = os.environ.get("NJT_PASSWORD")
+
+if not username or not password:
+    raise RuntimeError("Missing NJT_USERNAME or NJT_PASSWORD")
+
+_token_lock = Lock()
+_cached_token = None
+_cached_token_time = 0.0
+TOKEN_TTL_SECONDS = 25 * 60  # guess: refresh every 25 min
+
 
 app = Flask(__name__)
 
@@ -70,6 +87,24 @@ def get_bus_auth(username: str, password: str) -> str:
     return token
 
 
+def get_bus_token_cached() -> str:
+    global _cached_token, _cached_token_time
+
+    username = os.getenv("NJT_USERNAME")
+    password = os.getenv("NJT_PASSWORD")
+
+    if not username or not password:
+        raise RuntimeError("Missing NJT_USERNAME or NJT_PASSWORD environment variables")
+
+    now = time.time()
+    with _token_lock:
+        if _cached_token and (now - _cached_token_time) < TOKEN_TTL_SECONDS:
+            return _cached_token
+
+        token = get_bus_auth(username, password)
+        _cached_token = token
+        _cached_token_time = now
+        return token
 
 # Get NJ Transit bus times  
 #def get_buses():
@@ -85,6 +120,17 @@ def get_bus_auth(username: str, password: str) -> str:
 # Display results on / page
 
 @app.route("/")
+
+def bus_token():
+    try:
+        token = get_bus_token_cached()
+    except Exception as e:
+        return Response(f"Bus auth failed: {e}\n", mimetype="text/plain", status=502)
+
+    return Response(f"OK. Token prefix: {token[:12]}...\n", mimetype="text/plain")
+
+
+
 def board():
     trains = get_trains()
     if not trains:
