@@ -6,25 +6,19 @@ from threading import Lock
 from dotenv import load_dotenv
 load_dotenv()
 
+
 # PATH Train API
 TRAIN_URL = "https://www.panynj.gov/bin/portauthority/ridepath.json"
 
 # NJ Transit Bus API
 
 # Authentication 
-BUS_AUTH_URL = "https://pcsdata.njtransit.com/api/GTFSRT/authenticateUser"
-
-username = os.environ.get("NJT_USERNAME")
-password = os.environ.get("NJT_PASSWORD")
-
-if not username or not password:
-    raise RuntimeError("Missing NJT_USERNAME or NJT_PASSWORD")
+BUS_AUTH_URL = "https://pcsdata.njtransit.com/api/BUSDV2/authenticateUser"
 
 _token_lock = Lock()
 _cached_token = None
 _cached_token_time = 0.0
-TOKEN_TTL_SECONDS = 25 * 60  # guess: refresh every 25 min
-
+TOKEN_TTL_SECONDS = 25 * 60 
 
 app = Flask(__name__)
 
@@ -49,7 +43,7 @@ def get_trains():
                         seconds = msg.get("secondsToArrival", "")
                         try:
                             seconds = int(seconds)
-                        except:
+                        except (TypeError, ValueError):
                             # Fallback if missing
                             seconds = 999999  
 
@@ -67,26 +61,27 @@ def get_trains():
 
 # Bus API AUthentication 
 def get_bus_auth(username: str, password: str) -> str:
-    files = {
-        "username": (None, username),
-        "password": (None, password),
-    }
+    files = {"username": (None, username), "password": (None, password)}
 
-    headers = {
-        "accept": "text/plain",
-    }
+    if not username or not password:
+        raise RuntimeError("Missing NJT_USERNAME or NJT_PASSWORD")
 
-    r = requests.post(BUS_AUTH_URL, headers=headers, files=files, timeout=10)
+    r = requests.post(BUS_AUTH_URL, files=files, timeout=10)
     r.raise_for_status()
 
-    token = r.text.strip().strip('"')
+    data = r.json()
+    authenticated = str(data.get("Authenticated", "")).lower() == "true"
+    token = (data.get("UserToken") or "").strip()
+
+    if not authenticated:
+        raise RuntimeError("NJ Transit auth rejected credentials (Authenticated=False).")
 
     if not token:
-        raise RuntimeError("No token returned from NJ Transit")
-        
+        raise RuntimeError("Authenticated=True but UserToken is empty.")
+
     return token
 
-
+# Cache the returned token
 def get_bus_token_cached() -> str:
     global _cached_token, _cached_token_time
 
@@ -106,32 +101,24 @@ def get_bus_token_cached() -> str:
         _cached_token_time = now
         return token
 
-# Get NJ Transit bus times  
-#def get_buses():
-
-#    r = requests.get(BUS_URL)
-#    r.raise_for_status()
-
-
-#    buses = []
-
- #   return buses
-
-# Display results on / page
-
 @app.route("/")
 
-def bus_token():
+def board():
+
     try:
         token = get_bus_token_cached()
+        return Response(
+            f"Bus auth OK\nToken prefix: {token[:12]}...\n",
+            mimetype="text/plain",
+        )
+
     except Exception as e:
-        return Response(f"Bus auth failed: {e}\n", mimetype="text/plain", status=502)
+        return Response(
+            f"Bus auth FAILED: {e}\n",
+            mimetype="text/plain",
+            status=500,
+        )
 
-    return Response(f"OK. Token prefix: {token[:12]}...\n", mimetype="text/plain")
-
-
-
-def board():
     trains = get_trains()
     if not trains:
         body = "No trains found\n"
