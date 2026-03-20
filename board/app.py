@@ -19,7 +19,7 @@ BUS_AUTH_URL = f"{BUSDV2_BASE}/authenticateUser"
 _token_lock = Lock()
 _cached_token = None
 _cached_token_time = 0.0
-TOKEN_TTL_SECONDS = 25 * 60 
+TOKEN_TTL_SECONDS = 25 * 60
 
 # Get train times
 def get_trains():
@@ -33,25 +33,25 @@ def get_trains():
 
         # Filter to show only JSQ trains
         if item.get("consideredStation") == "JSQ":
-        
+
             for dest in item.get("destinations", []):
 
-             # Filter to show only trains to NY
-             if dest.get("label") == "ToNY":
-                    
-                for msg in dest.get("messages", []):
-                    seconds_raw = msg.get("secondsToArrival")
-                    try:
-                        seconds = int(seconds_raw)
-                    except (TypeError, ValueError):
-                        seconds = 999999
-                    trains.append(
-                        {
-                            "headsign": msg.get("headSign", ""),
-                            "arrival": msg.get("arrivalTimeMessage", ""),
-                            "seconds": seconds,
-                        }
-                    )
+                # Filter to show only trains to NY
+                if dest.get("label") == "ToNY":
+
+                    for msg in dest.get("messages", []):
+                        seconds_raw = msg.get("secondsToArrival")
+                        try:
+                            seconds = int(seconds_raw)
+                        except (TypeError, ValueError):
+                            seconds = 999999
+                        trains.append(
+                            {
+                                "headsign": msg.get("headSign", ""),
+                                "arrival": msg.get("arrivalTimeMessage", ""),
+                                "seconds": seconds,
+                            }
+                        )
 
     # Sort results in order of departure time
     trains.sort(key=lambda t: t["seconds"])
@@ -59,16 +59,7 @@ def get_trains():
     return trains
 
 
-# --- BUSDV2 helpers ---
-def bus_post(path: str, fields: dict) -> dict:
-    # NJT BUSDV2 endpoints expect multipart form-data in practice
-    files = {k: (None, str(v)) for k, v in fields.items() if v is not None}
-    r = requests.post(f"{BUSDV2_BASE}/{path}", files=files, timeout=10)
-    r.raise_for_status()
-    return r.json()
-
-
-# Bus API AUthentication 
+# Bus API Authentication
 def get_bus_auth(username: str, password: str) -> str:
 
     if not username or not password:
@@ -90,6 +81,7 @@ def get_bus_auth(username: str, password: str) -> str:
         raise RuntimeError("Authenticated=True but UserToken is empty.")
 
     return token
+
 
 # Cache the returned token
 def get_bus_token_cached() -> str:
@@ -114,16 +106,16 @@ def get_bus_token_cached() -> str:
 
 # Get the bus departure times
 def get_bus_dv(token: str, route: str, stop: str, direction: str) -> dict:
-    return bus_post(
-        "getBusDV",
-        {
-            "token": token,
-            "route": route,
-            "stop": stop,
-            "direction": direction,
-            "IP": "",
-        },
-        )
+    fields = {
+        "token": token,
+        "route": route,
+        "stop": stop,
+        "direction": direction,
+    }
+    files = {k: (None, str(v)) for k, v in fields.items()}
+    r = requests.post(f"{BUSDV2_BASE}/getBusDV", files=files, timeout=10)
+    r.raise_for_status()
+    return r.json()
 
 
 @app.route("/")
@@ -137,11 +129,9 @@ def board():
     try:
 
         now = datetime.now().strftime("%I:%M:%S %p")
-        refreshed = datetime.now().strftime("%I:%M:%S %p")
 
         lines = []
         lines.append(f"Current time: {now}")
-        lines.append(f"Last refreshed: {refreshed}")
         lines.append("")
 
         # bus info
@@ -158,7 +148,7 @@ def board():
                 stop=stop,
                 direction=direction
             )
-            
+
             for row in data.get("DVTrip", []):
                 bus_found = True
                 status = row.get("departurestatus", "")
@@ -207,9 +197,7 @@ def board():
             </html>
             """
 
-
-        return Response(html
-            ,
+        return Response(html,
             mimetype="text/html",
             )
 
@@ -223,6 +211,3 @@ def board():
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8000, debug=True)
-
-
-
