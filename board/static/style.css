@@ -1,22 +1,83 @@
-/* Page */
 body {
-  background: black;
-  color: white;
+  background: #0a0a0a;
+  color: #e0e0e0;
   font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
-  font-size: 20px;
-  padding: 20px;
+  font-size: 18px;
+  padding: 28px;
   margin: 0;
+  max-width: 620px;
 }
 
-/* Header */
-.header {
-  margin-bottom: 24px;
-  line-height: 1.4;
+.clock {
+  font-size: 52px;
+  color: white;
+  margin-bottom: 36px;
+  letter-spacing: 2px;
 }
 
-/* Section titles */
-h1 {
-  margin: 24px 0 8px 0;
+section {
+  margin-bottom: 40px;
+}
+
+h2 {
+  font-size: 12px;
+  letter-spacing: 3px;
+  color: #555;
+  margin: 0 0 14px 0;
   font-weight: normal;
+  border-bottom: 1px solid #1e1e1e;
+  padding-bottom: 8px;
+}
+
+.subtitle {
+  font-size: 11px;
+  color: #444;
+  margin-left: 8px;
+  letter-spacing: 0;
+}
+
+.departures {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.row {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+}
+
+.status {
+  font-size: 11px;
   letter-spacing: 1px;
+  color: #666;
+  min-width: 100px;
+  text-transform: uppercase;
+}
+
+.status.scheduled {
+  color: #5a9;
+}
+
+.status.departed {
+  color: #444;
+}
+
+.route {
+  color: #ccc;
+}
+
+.time {
+  min-width: 75px;
+  color: #888;
+}
+
+.headsign {
+  /* color set inline per train line */
+}
+
+.none {
+  color: #444;
+  margin: 0;
 }

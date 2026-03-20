@@ -1,54 +1,46 @@
 <!doctype html>
+<html>
+<head>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta http-equiv="refresh" content="{{ refresh_seconds }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Departures</title>
+</head>
+<body>
 
-  <html>
-  <head>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <meta http-equiv="refresh" content="{{ refresh_seconds }}">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  </head>
-  <body>
-    <div>
+  <div class="clock">{{ now }}</div>
 
-      <p>The current time is {{ now }}</p>
-      <p>Bus and train times last refreshed at {{ refreshed }}</p>
-
-      <div>
-        <h1>BUSES</h1>
-        <p>Upcoming departures from Newark & Chestnut:</p>
-        
-          <div>
-          {% if bus_lines %}
-          {% for line in bus_lines %}
-          <div>
-            {{ line }}
-          </div>
-          {% endfor %}
-          {% else %}
-          No upcoming bus departures
-          {% endif %} 
-          </div>
-      
-          <h1>TRAINS</h1>
-          <p>Upcoming NYC-bound departues from JSQ:</p>
-          
-          <div>
-          {% if trains %}
-          {% for t in trains %}
-          <div>
-              <span style="color:#{{ t.line }};">
-              {{ "%10s"|format(t.arrival) }} {{ t.headsign }}</span>
-          </div>
-          {% endfor %}
-          {% else %}
-          No upcoming train departures
-          {% endif %}
-
-          </div>
-        
+  <section>
+    <h2>BUSES <span class="subtitle">Newark &amp; Chestnut &rarr; Exchange Place</span></h2>
+    {% if buses %}
+    <div class="departures">
+      {% for b in buses %}
+      <div class="row">
+        <span class="status {{ b.status | lower }}">{{ b.status }}</span>
+        <span class="route">{{ b.header }}</span>
       </div>
-      
-
-
+      {% endfor %}
     </div>
-  </body>
-  </html>
+    {% else %}
+    <p class="none">No upcoming departures</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2>TRAINS <span class="subtitle">JSQ &rarr; New York</span></h2>
+    {% if trains %}
+    <div class="departures">
+      {% for t in trains %}
+      <div class="row">
+        <span class="time">{{ t.arrival }}</span>
+        <span class="headsign" style="color: #{{ t.line }};">{{ t.headsign }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="none">No upcoming departures</p>
+    {% endif %}
+  </section>
+
+</body>
+</html>

@@ -136,7 +136,7 @@ def board():
 
         # bus info
         token = get_bus_token_cached()
-        bus_lines = []
+        buses = []
 
         for route in routes:
             data = get_bus_dv(
@@ -147,16 +147,17 @@ def board():
             )
 
             for row in data.get("DVTrip", []):
-                status = row.get("departurestatus", "")
-                header = row.get("header", "")
-                bus_lines.append(f"{status:>10}  {header}")
+                buses.append({
+                    "status": row.get("departurestatus", ""),
+                    "header": row.get("header", ""),
+                })
 
         # train info
         trains = get_trains()
 
         return render_template(
             "board.html",
-            bus_lines=bus_lines,
+            buses=buses,
             now=now,
             refreshed=refreshed,
             trains=trains,
