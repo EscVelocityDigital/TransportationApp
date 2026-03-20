@@ -8,11 +8,27 @@
 </head>
 <body>
 
-  <div class="clock">{{ now }}</div>
+  <div class="clock" id="clock">{{ now }}</div>
   <div class="meta">
-    <p>The current time is {{ now }}</p>
+    <p>The current time is <span id="current-time">{{ now }}</span></p>
     <p>Bus and train times last refreshed at {{ refreshed }}</p>
   </div>
+
+  <script>
+    function updateClock() {
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const h = String(hours % 12 || 12).padStart(2, '0');
+      const timeStr = `${h}:${minutes}:${seconds} ${ampm}`;
+      document.getElementById('clock').textContent = timeStr;
+      document.getElementById('current-time').textContent = timeStr;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+  </script>
 
   <section>
     <h2>BUSES <span class="subtitle">Newark &amp; Chestnut &rarr; Exchange Place</span></h2>
