@@ -1,0 +1,22 @@
+/* Page */
+body {
+  background: black;
+  color: white;
+  font-family: Menlo, Monaco, Consolas, "Courier New", monospace;
+  font-size: 20px;
+  padding: 20px;
+  margin: 0;
+}
+
+/* Header */
+.header {
+  margin-bottom: 24px;
+  line-height: 1.4;
+}
+
+/* Section titles */
+h1 {
+  margin: 24px 0 8px 0;
+  font-weight: normal;
+  letter-spacing: 1px;
+}

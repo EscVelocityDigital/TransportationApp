@@ -1,4 +1,4 @@
-from flask import Flask, Response
+from flask import Flask, Response, render_template
 import requests
 import os
 import time
@@ -45,11 +45,15 @@ def get_trains():
                             seconds = int(seconds_raw)
                         except (TypeError, ValueError):
                             seconds = 999999
+
+                        line = (msg.get("lineColor") or "").strip()
+
                         trains.append(
                             {
                                 "headsign": msg.get("headSign", ""),
                                 "arrival": msg.get("arrivalTimeMessage", ""),
                                 "seconds": seconds,
+                                "line": line,
                             }
                         )
 
@@ -119,7 +123,6 @@ def get_bus_dv(token: str, route: str, stop: str, direction: str) -> dict:
 
 
 @app.route("/")
-
 def board():
 
     stop = "20955"
@@ -129,17 +132,11 @@ def board():
     try:
 
         now = datetime.now().strftime("%I:%M:%S %p")
-
-        lines = []
-        lines.append(f"Current time: {now}")
-        lines.append("")
+        refreshed = datetime.now().strftime("%I:%M:%S %p")
 
         # bus info
         token = get_bus_token_cached()
-        lines.append("Route 80 & 86 - Stop Newark & Chestnut")
-        lines.append("")
-
-        bus_found = False
+        bus_lines = []
 
         for route in routes:
             data = get_bus_dv(
@@ -150,56 +147,21 @@ def board():
             )
 
             for row in data.get("DVTrip", []):
-                bus_found = True
                 status = row.get("departurestatus", "")
                 header = row.get("header", "")
-                lines.append(f"{status:>10}  {header}")
-
-        if not bus_found:
-            lines.append("No upcoming bus departures")
+                bus_lines.append(f"{status:>10}  {header}")
 
         # train info
-        lines.append("")
-        lines.append("Upcoming trains to NYC leaving JSQ")
-        lines.append("")
-
         trains = get_trains()
 
-        if not trains:
-            lines.append("No upcoming train departures found")
-        else:
-            for t in trains[:6]:
-                lines.append(f"{t['arrival']:>10} {t['headsign']}")
-
-        body = "\n".join(lines)
-
-        html = f"""
-            <html>
-              <head>
-                <meta http-equiv="refresh" content="15">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <style>
-                  body {{
-                    font-family: monospace;
-                    font-size: 20px;
-                    padding: 16px;
-                    background: black;
-                    color: white;
-                  }}
-                  pre {{
-                    white-space: pre-wrap;
-                  }}
-                </style>
-              </head>
-              <body>
-                <pre>{body}</pre>
-              </body>
-            </html>
-            """
-
-        return Response(html,
-            mimetype="text/html",
-            )
+        return render_template(
+            "board.html",
+            bus_lines=bus_lines,
+            now=now,
+            refreshed=refreshed,
+            trains=trains,
+            refresh_seconds=15,
+        )
 
     except Exception as e:
         return Response(

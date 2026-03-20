@@ -1,0 +1,54 @@
+<!doctype html>
+
+  <html>
+  <head>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta http-equiv="refresh" content="{{ refresh_seconds }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+  <body>
+    <div>
+
+      <p>The current time is {{ now }}</p>
+      <p>Bus and train times last refreshed at {{ refreshed }}</p>
+
+      <div>
+        <h1>BUSES</h1>
+        <p>Upcoming departures from Newark & Chestnut:</p>
+        
+          <div>
+          {% if bus_lines %}
+          {% for line in bus_lines %}
+          <div>
+            {{ line }}
+          </div>
+          {% endfor %}
+          {% else %}
+          No upcoming bus departures
+          {% endif %} 
+          </div>
+      
+          <h1>TRAINS</h1>
+          <p>Upcoming NYC-bound departues from JSQ:</p>
+          
+          <div>
+          {% if trains %}
+          {% for t in trains %}
+          <div>
+              <span style="color:#{{ t.line }};">
+              {{ "%10s"|format(t.arrival) }} {{ t.headsign }}</span>
+          </div>
+          {% endfor %}
+          {% else %}
+          No upcoming train departures
+          {% endif %}
+
+          </div>
+        
+      </div>
+      
+
+
+    </div>
+  </body>
+  </html>
