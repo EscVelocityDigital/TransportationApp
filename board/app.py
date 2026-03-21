@@ -16,10 +16,22 @@ TRAIN_URL = "https://www.panynj.gov/bin/portauthority/ridepath.json"
 BUSDV2_BASE = "https://pcsdata.njtransit.com/api/BUSDV2"
 BUS_AUTH_URL = f"{BUSDV2_BASE}/authenticateUser"
 
+# OpenSky API
+OPENSKY_TOKEN_URL = "https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token"
+OPENSKY_STATES_URL = "https://opensky-network.org/api/states/all"
+LOCATION_LAT = 40.72988255549963
+LOCATION_LON = -74.05870460265524
+LOCATION_RADIUS_DEG = 0.5
+
 _token_lock = Lock()
 _cached_token = None
 _cached_token_time = 0.0
 TOKEN_TTL_SECONDS = 25 * 60
+
+_opensky_token_lock = Lock()
+_opensky_cached_token = None
+_opensky_cached_token_time = 0.0
+OPENSKY_TOKEN_TTL_SECONDS = 4 * 60  # tokens expire in 5 min, refresh at 4
 
 # Get train times
 def get_trains():
@@ -108,6 +120,68 @@ def get_bus_token_cached() -> str:
         return token
 
 
+# OpenSky token
+def get_opensky_token() -> str:
+    global _opensky_cached_token, _opensky_cached_token_time
+
+    client_id = os.getenv("OPENSKY_CLIENT_ID")
+    client_secret = os.getenv("OPENSKY_CLIENT_SECRET")
+
+    if not client_id or not client_secret:
+        raise RuntimeError("Missing OPENSKY_CLIENT_ID or OPENSKY_CLIENT_SECRET")
+
+    now = time.time()
+    with _opensky_token_lock:
+        if _opensky_cached_token and (now - _opensky_cached_token_time) < OPENSKY_TOKEN_TTL_SECONDS:
+            return _opensky_cached_token
+
+        r = requests.post(
+            OPENSKY_TOKEN_URL,
+            data={
+                "grant_type": "client_credentials",
+                "client_id": client_id,
+                "client_secret": client_secret,
+            },
+            timeout=10,
+        )
+        r.raise_for_status()
+        _opensky_cached_token = r.json()["access_token"]
+        _opensky_cached_token_time = now
+        return _opensky_cached_token
+
+
+# Get flights overhead
+def get_flights_overhead() -> list:
+    token = get_opensky_token()
+    params = {
+        "lamin": LOCATION_LAT - LOCATION_RADIUS_DEG,
+        "lomin": LOCATION_LON - LOCATION_RADIUS_DEG,
+        "lamax": LOCATION_LAT + LOCATION_RADIUS_DEG,
+        "lomax": LOCATION_LON + LOCATION_RADIUS_DEG,
+    }
+    r = requests.get(
+        OPENSKY_STATES_URL,
+        headers={"Authorization": f"Bearer {token}"},
+        params=params,
+        timeout=10,
+    )
+    r.raise_for_status()
+    data = r.json()
+
+    fields = [
+        "icao24", "callsign", "origin_country", "time_position", "last_contact",
+        "longitude", "latitude", "baro_altitude", "on_ground", "velocity",
+        "true_track", "vertical_rate", "sensors", "geo_altitude", "squawk",
+        "spi", "position_source",
+    ]
+
+    flights = []
+    for state in (data.get("states") or []):
+        flights.append(dict(zip(fields, state)))
+
+    return flights
+
+
 # Get the bus departure times
 def get_bus_dv(token: str, route: str, stop: str, direction: str) -> dict:
     fields = {
@@ -155,12 +229,16 @@ def board():
         # train info
         trains = get_trains()
 
+        # flights overhead
+        flights = get_flights_overhead()
+
         return render_template(
             "board.html",
             buses=buses,
             now=now,
             refreshed=refreshed,
             trains=trains,
+            flights=flights,
             refresh_seconds=15,
         )
 

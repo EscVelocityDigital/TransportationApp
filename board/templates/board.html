@@ -11,7 +11,7 @@
   <div class="clock" id="clock">{{ now }}</div>
   <div class="meta">
     <p>The current time is <span id="current-time">{{ now }}</span></p>
-    <p>Bus and train times last refreshed at {{ refreshed }}</p>
+    <p>Bus, train, and flight times last refreshed at {{ refreshed }}</p>
   </div>
 
   <script>
@@ -59,6 +59,30 @@
     </div>
     {% else %}
     <p class="none">No upcoming departures</p>
+    {% endif %}
+  </section>
+
+  <section>
+    <h2>FLIGHTS <span class="subtitle">Overhead (~0.5&deg; radius)</span></h2>
+    {% if flights %}
+    <table class="flights">
+      <thead>
+        <tr>
+          <th>Callsign</th>
+          <th>Altitude (m)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for f in flights %}
+        <tr>
+          <td>{{ f.callsign or '—' }}</td>
+          <td>{{ f.baro_altitude if f.baro_altitude is not none else '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p class="none">No flights overhead</p>
     {% endif %}
   </section>
 

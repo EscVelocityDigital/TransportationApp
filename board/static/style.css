@@ -10,7 +10,7 @@ body {
   font-size: 18px;
   padding: 28px;
   margin: 0;
-  max-width: 620px;
+  max-width: 1400px;
   animation: flash 0.4s ease-out;
 }
 
@@ -97,4 +97,31 @@ h2 {
 .none {
   color: #777;
   margin: 0;
+}
+
+table.flights {
+  border-collapse: collapse;
+  font-size: 14px;
+  width: 100%;
+  overflow-x: auto;
+  display: block;
+}
+
+table.flights th,
+table.flights td {
+  text-align: left;
+  padding: 6px 12px;
+  border-bottom: 1px solid #222;
+  white-space: nowrap;
+}
+
+table.flights th {
+  color: #777;
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+table.flights td {
+  color: #e0e0e0;
 }
