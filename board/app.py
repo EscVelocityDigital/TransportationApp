@@ -21,7 +21,7 @@ OPENSKY_TOKEN_URL = "https://auth.opensky-network.org/auth/realms/opensky-networ
 OPENSKY_STATES_URL = "https://opensky-network.org/api/states/all"
 LOCATION_LAT = 40.72988255549963
 LOCATION_LON = -74.05870460265524
-LOCATION_RADIUS_DEG = 0.5
+LOCATION_RADIUS_DEG = 0.015
 
 _token_lock = Lock()
 _cached_token = None
