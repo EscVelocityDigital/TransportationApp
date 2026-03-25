@@ -69,7 +69,6 @@
         <tr>
           <th></th>
           <th>Flight</th>
-          <th>Airline</th>
           <th>From</th>
           <th>To</th>
           <th>Aircraft</th>
@@ -85,7 +84,6 @@
             {% endif %}
           </td>
           <td>{{ f.flight_iata or f.callsign or '—' }}</td>
-          <td>{{ f.airline or '—' }}</td>
           <td>{{ f.departure_iata or '—' }}{% if f.departure_airport %} <span class="airport-name">{{ f.departure_airport }}</span>{% endif %}</td>
           <td>{{ f.arrival_iata or '—' }}{% if f.arrival_airport %} <span class="airport-name">{{ f.arrival_airport }}</span>{% endif %}</td>
           <td>{{ f.aircraft or '—' }}</td>

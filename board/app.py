@@ -27,6 +27,11 @@ LOCATION_RADIUS_DEG = 0.072
 AVIATIONSTACK_BASE = "http://api.aviationstack.com/v1"
 AVIATIONSTACK_FLIGHT_TTL_SECONDS = 10 * 60  # cache each flight lookup for 10 min
 
+# OpenSky aircraft metadata
+OPENSKY_METADATA_URL = "https://opensky-network.org/api/metadata/aircraft/icao"
+AIRCRAFT_META_TTL_SECONDS = 24 * 60 * 60  # aircraft type rarely changes, cache for 24h
+_aircraft_meta_cache: dict = {}  # keyed by icao24
+
 # ICAO -> IATA airline code mapping for common carriers near EWR/JFK/LGA
 ICAO_TO_IATA = {
     "AAL": "AA",  # American
@@ -242,6 +247,36 @@ def get_aviationstack_flight(callsign: str) -> dict:
     return info
 
 
+# Look up aircraft model from OpenSky metadata by icao24 transponder code
+def get_aircraft_model(icao24: str) -> str:
+    if not icao24:
+        return ""
+
+    now = time.time()
+    cached = _aircraft_meta_cache.get(icao24)
+    if cached and (now - cached["fetched_at"]) < AIRCRAFT_META_TTL_SECONDS:
+        return cached["model"]
+
+    try:
+        token = get_opensky_token()
+        r = requests.get(
+            f"{OPENSKY_METADATA_URL}/{icao24}",
+            headers={"Authorization": f"Bearer {token}"},
+            timeout=10,
+        )
+        if r.status_code == 404:
+            model = ""
+        else:
+            r.raise_for_status()
+            data = r.json()
+            model = data.get("model") or ""
+    except Exception:
+        model = ""
+
+    _aircraft_meta_cache[icao24] = {"model": model, "fetched_at": now}
+    return model
+
+
 # Get flights overhead
 def get_flights_overhead() -> list:
     token = get_opensky_token()
@@ -282,7 +317,7 @@ def get_flights_overhead() -> list:
         flight["departure_iata"] = (av.get("departure") or {}).get("iata", "")
         flight["arrival_airport"] = (av.get("arrival") or {}).get("airport", "")
         flight["arrival_iata"] = (av.get("arrival") or {}).get("iata", "")
-        flight["aircraft"] = (av.get("aircraft") or {}).get("description", "")
+        flight["aircraft"] = get_aircraft_model(flight.get("icao24", ""))
 
         # Skip flights with no AviationStack data
         if not flight["airline"]:
