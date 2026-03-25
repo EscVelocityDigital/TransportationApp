@@ -62,9 +62,8 @@
     {% endif %}
   </section>
 
+  {% if flights %}
   <section>
-    <h2>FLIGHTS <span class="subtitle">Overhead (~5 mile radius)</span></h2>
-    {% if flights %}
     <table class="flights">
       <thead>
         <tr>
@@ -95,10 +94,8 @@
         {% endfor %}
       </tbody>
     </table>
-    {% else %}
-    <p class="none">No flights overhead</p>
-    {% endif %}
   </section>
+  {% endif %}
 
 </body>
 </html>
