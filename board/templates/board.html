@@ -68,6 +68,7 @@
     <table class="flights">
       <thead>
         <tr>
+          <th></th>
           <th>Flight</th>
           <th>Airline</th>
           <th>From</th>
@@ -78,6 +79,11 @@
       <tbody>
         {% for f in flights %}
         <tr>
+          <td class="airline-logo">
+            {% if f.airline_iata %}
+            <img src="https://pics.avs.io/50/50/{{ f.airline_iata }}.png" alt="{{ f.airline }}" title="{{ f.airline }}">
+            {% endif %}
+          </td>
           <td>{{ f.flight_iata or f.callsign or '—' }}</td>
           <td>{{ f.airline or '—' }}</td>
           <td>{{ f.departure_iata or '—' }}{% if f.departure_airport %} <span class="airport-name">{{ f.departure_airport }}</span>{% endif %}</td>
