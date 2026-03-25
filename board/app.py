@@ -23,6 +23,10 @@ LOCATION_LAT = 40.72988255549963
 LOCATION_LON = -74.05870460265524
 LOCATION_RADIUS_DEG = 0.072
 
+# AviationStack API
+AVIATIONSTACK_BASE = "http://api.aviationstack.com/v1"
+AVIATIONSTACK_FLIGHT_TTL_SECONDS = 10 * 60  # cache each flight lookup for 10 min
+
 _token_lock = Lock()
 _cached_token = None
 _cached_token_time = 0.0
@@ -32,6 +36,8 @@ _opensky_token_lock = Lock()
 _opensky_cached_token = None
 _opensky_cached_token_time = 0.0
 OPENSKY_TOKEN_TTL_SECONDS = 4 * 60  # tokens expire in 5 min, refresh at 4
+
+_flight_info_cache: dict = {}  # keyed by callsign -> {data, fetched_at}
 
 # Get train times
 def get_trains():
@@ -150,6 +156,33 @@ def get_opensky_token() -> str:
         return _opensky_cached_token
 
 
+# Look up flight details from AviationStack by ICAO callsign, with caching
+def get_aviationstack_flight(callsign: str) -> dict:
+    api_key = os.getenv("AVIATIONSTACK_API_KEY")
+    if not api_key or not callsign:
+        return {}
+
+    now = time.time()
+    cached = _flight_info_cache.get(callsign)
+    if cached and (now - cached["fetched_at"]) < AVIATIONSTACK_FLIGHT_TTL_SECONDS:
+        return cached["data"]
+
+    try:
+        r = requests.get(
+            f"{AVIATIONSTACK_BASE}/flights",
+            params={"access_key": api_key, "flight_icao": callsign},
+            timeout=10,
+        )
+        r.raise_for_status()
+        results = r.json().get("data") or []
+        info = results[0] if results else {}
+    except Exception:
+        info = {}
+
+    _flight_info_cache[callsign] = {"data": info, "fetched_at": now}
+    return info
+
+
 # Get flights overhead
 def get_flights_overhead() -> list:
     token = get_opensky_token()
@@ -177,7 +210,24 @@ def get_flights_overhead() -> list:
 
     flights = []
     for state in (data.get("states") or []):
-        flights.append(dict(zip(fields, state)))
+        flight = dict(zip(fields, state))
+        callsign = (flight.get("callsign") or "").strip()
+        if callsign:
+            av = get_aviationstack_flight(callsign)
+            flight["airline"] = (av.get("airline") or {}).get("name", "")
+            flight["flight_iata"] = (av.get("flight") or {}).get("iata", "")
+            flight["departure_airport"] = (av.get("departure") or {}).get("airport", "")
+            flight["departure_iata"] = (av.get("departure") or {}).get("iata", "")
+            flight["arrival_airport"] = (av.get("arrival") or {}).get("airport", "")
+            flight["arrival_iata"] = (av.get("arrival") or {}).get("iata", "")
+        else:
+            flight["airline"] = ""
+            flight["flight_iata"] = ""
+            flight["departure_airport"] = ""
+            flight["departure_iata"] = ""
+            flight["arrival_airport"] = ""
+            flight["arrival_iata"] = ""
+        flights.append(flight)
 
     return flights
 
