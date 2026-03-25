@@ -247,6 +247,89 @@ def get_aviationstack_flight(callsign: str) -> dict:
     return info
 
 
+# Friendly names for common ICAO type codes
+TYPECODE_NAMES = {
+    # Boeing
+    "B736": "Boeing 737-600",
+    "B737": "Boeing 737-700",
+    "B738": "Boeing 737-800",
+    "B739": "Boeing 737-900",
+    "B37M": "Boeing 737 MAX 7",
+    "B38M": "Boeing 737 MAX 8",
+    "B39M": "Boeing 737 MAX 9",
+    "B752": "Boeing 757-200",
+    "B753": "Boeing 757-300",
+    "B762": "Boeing 767-200",
+    "B763": "Boeing 767-300",
+    "B764": "Boeing 767-400",
+    "B772": "Boeing 777-200",
+    "B773": "Boeing 777-300",
+    "B77W": "Boeing 777-300ER",
+    "B788": "Boeing 787-8 Dreamliner",
+    "B789": "Boeing 787-9 Dreamliner",
+    "B78X": "Boeing 787-10 Dreamliner",
+    "B744": "Boeing 747-400",
+    "B748": "Boeing 747-8",
+    # Airbus
+    "A19N": "Airbus A319neo",
+    "A20N": "Airbus A320neo",
+    "A21N": "Airbus A321neo",
+    "A318": "Airbus A318",
+    "A319": "Airbus A319",
+    "A320": "Airbus A320",
+    "A321": "Airbus A321",
+    "A332": "Airbus A330-200",
+    "A333": "Airbus A330-300",
+    "A338": "Airbus A330-800neo",
+    "A339": "Airbus A330-900neo",
+    "A359": "Airbus A350-900",
+    "A35K": "Airbus A350-1000",
+    "A388": "Airbus A380",
+    # Bombardier
+    "CL30": "Bombardier Challenger 300",
+    "CL35": "Bombardier Challenger 350",
+    "CL60": "Bombardier Challenger 600",
+    "CRJ2": "Bombardier CRJ-200",
+    "CRJ7": "Bombardier CRJ-700",
+    "CRJ9": "Bombardier CRJ-900",
+    "CRJX": "Bombardier CRJ-1000",
+    "GLEX": "Bombardier Global Express",
+    "GL7T": "Bombardier Global 7500",
+    "GL5T": "Bombardier Global 5000",
+    # Embraer
+    "E170": "Embraer E170",
+    "E175": "Embraer E175",
+    "E190": "Embraer E190",
+    "E195": "Embraer E195",
+    "E290": "Embraer E190-E2",
+    "E295": "Embraer E195-E2",
+    "E35L": "Embraer Legacy 600",
+    "E55P": "Embraer Phenom 300",
+    # Gulfstream
+    "GLF4": "Gulfstream IV",
+    "GLF5": "Gulfstream V",
+    "GLF6": "Gulfstream G650",
+    "G280": "Gulfstream G280",
+    # Cessna
+    "C25A": "Cessna Citation CJ2",
+    "C25B": "Cessna Citation CJ3",
+    "C25C": "Cessna Citation CJ4",
+    "C56X": "Cessna Citation Excel",
+    "C680": "Cessna Citation Sovereign",
+    "C68A": "Cessna Citation Longitude",
+    "C750": "Cessna Citation X",
+    # Other
+    "DH8D": "Dash 8-400",
+    "MD11": "McDonnell Douglas MD-11",
+    "MD82": "McDonnell Douglas MD-82",
+    "MD83": "McDonnell Douglas MD-83",
+    "LJ60": "Learjet 60",
+    "LJ75": "Learjet 75",
+    "PC12": "Pilatus PC-12",
+    "BE20": "Beechcraft King Air 200",
+}
+
+
 # Look up aircraft model from OpenSky metadata by icao24 transponder code
 def get_aircraft_model(icao24: str) -> str:
     if not icao24:
@@ -269,7 +352,16 @@ def get_aircraft_model(icao24: str) -> str:
         else:
             r.raise_for_status()
             data = r.json()
-            model = data.get("model") or ""
+            typecode = (data.get("typecode") or "").strip().upper()
+            manufacturer = (data.get("manufacturerName") or "").strip()
+            raw_model = (data.get("model") or "").strip()
+            # Use friendly name if we have one, otherwise combine manufacturer + model
+            if typecode in TYPECODE_NAMES:
+                model = TYPECODE_NAMES[typecode]
+            elif manufacturer and raw_model:
+                model = f"{manufacturer} {raw_model}"
+            else:
+                model = raw_model
     except Exception:
         model = ""
 
