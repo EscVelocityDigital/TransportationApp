@@ -27,6 +27,53 @@ LOCATION_RADIUS_DEG = 0.072
 AVIATIONSTACK_BASE = "http://api.aviationstack.com/v1"
 AVIATIONSTACK_FLIGHT_TTL_SECONDS = 10 * 60  # cache each flight lookup for 10 min
 
+# ICAO -> IATA airline code mapping for common carriers near EWR/JFK/LGA
+ICAO_TO_IATA = {
+    "AAL": "AA",  # American
+    "AFR": "AF",  # Air France
+    "AMX": "AM",  # Aeromexico
+    "ASA": "AS",  # Alaska
+    "AUA": "OS",  # Austrian
+    "AZA": "IZ",  # Alitalia (historic)
+    "BAW": "BA",  # British Airways
+    "BWA": "BW",  # Caribbean Airlines
+    "CAL": "CI",  # China Airlines
+    "CLX": "CV",  # Cargolux
+    "CNW": "KR",  # Caribbean Sun
+    "CPZ": "CP",  # Compass Airlines
+    "CPA": "CX",  # Cathay Pacific
+    "DAL": "DL",  # Delta
+    "DLH": "LH",  # Lufthansa
+    "EIN": "EI",  # Aer Lingus
+    "EJA": "EJ",  # NetJets
+    "ENY": "MQ",  # Envoy/American Eagle
+    "ETD": "EY",  # Etihad
+    "ETH": "ET",  # Ethiopian
+    "EWG": "EW",  # Eurowings
+    "FDX": "FX",  # FedEx
+    "FFT": "F9",  # Frontier
+    "GTI": "GT",  # Atlas Air
+    "HAL": "HA",  # Hawaiian
+    "IBE": "IB",  # Iberia
+    "JBU": "B6",  # JetBlue
+    "KAL": "KE",  # Korean Air
+    "KLM": "KL",  # KLM
+    "LXJ": "XJ",  # Flexjet
+    "NKS": "NK",  # Spirit
+    "PDT": "OE",  # Piedmont
+    "PSA": "KS",  # PSA Airlines
+    "QTR": "QR",  # Qatar
+    "QXE": "QX",  # Horizon Air
+    "RPA": "YX",  # Republic Airways
+    "SKW": "OO",  # SkyWest
+    "SWA": "WN",  # Southwest
+    "SWR": "LX",  # Swiss
+    "THY": "TK",  # Turkish
+    "UAL": "UA",  # United
+    "UPS": "5X",  # UPS
+    "VIR": "VS",  # Virgin Atlantic
+}
+
 _token_lock = Lock()
 _cached_token = None
 _cached_token_time = 0.0
@@ -156,7 +203,8 @@ def get_opensky_token() -> str:
         return _opensky_cached_token
 
 
-# Look up flight details from AviationStack by ICAO callsign, with caching
+# Look up flight details from AviationStack by ICAO callsign, with caching.
+# Falls back to IATA lookup if the ICAO query returns nothing.
 def get_aviationstack_flight(callsign: str) -> dict:
     api_key = os.getenv("AVIATIONSTACK_API_KEY")
     if not api_key or not callsign:
@@ -167,15 +215,26 @@ def get_aviationstack_flight(callsign: str) -> dict:
     if cached and (now - cached["fetched_at"]) < AVIATIONSTACK_FLIGHT_TTL_SECONDS:
         return cached["data"]
 
-    try:
+    def query(param, value):
         r = requests.get(
             f"{AVIATIONSTACK_BASE}/flights",
-            params={"access_key": api_key, "flight_icao": callsign},
+            params={"access_key": api_key, param: value},
             timeout=10,
         )
         r.raise_for_status()
         results = r.json().get("data") or []
-        info = results[0] if results else {}
+        return results[0] if results else {}
+
+    try:
+        info = query("flight_icao", callsign)
+
+        if not info:
+            # Try converting ICAO airline prefix to IATA and retry
+            icao_prefix = callsign[:3].upper()
+            flight_number = callsign[3:]
+            iata_prefix = ICAO_TO_IATA.get(icao_prefix)
+            if iata_prefix and flight_number:
+                info = query("flight_iata", f"{iata_prefix}{flight_number}")
     except Exception:
         info = {}
 
