@@ -282,6 +282,7 @@ def get_flights_overhead() -> list:
         flight["departure_iata"] = (av.get("departure") or {}).get("iata", "")
         flight["arrival_airport"] = (av.get("arrival") or {}).get("airport", "")
         flight["arrival_iata"] = (av.get("arrival") or {}).get("iata", "")
+        flight["aircraft"] = (av.get("aircraft") or {}).get("description", "")
 
         # Skip flights with no AviationStack data
         if not flight["airline"]:
