@@ -106,7 +106,7 @@ def get_trains():
 
             for dest in item.get("destinations", []):
 
-                if dest.get("label") == "ToNWK":
+                if dest.get("label") == "ToNJ":
                     continue
 
                 for msg in dest.get("messages", []):
