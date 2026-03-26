@@ -106,26 +106,23 @@ def get_trains():
 
             for dest in item.get("destinations", []):
 
-                # Filter to show only trains to NY
-                if dest.get("label") == "ToNY":
+                for msg in dest.get("messages", []):
+                    seconds_raw = msg.get("secondsToArrival")
+                    try:
+                        seconds = int(seconds_raw)
+                    except (TypeError, ValueError):
+                        seconds = 999999
 
-                    for msg in dest.get("messages", []):
-                        seconds_raw = msg.get("secondsToArrival")
-                        try:
-                            seconds = int(seconds_raw)
-                        except (TypeError, ValueError):
-                            seconds = 999999
+                    line = (msg.get("lineColor") or "").strip()
 
-                        line = (msg.get("lineColor") or "").strip()
-
-                        trains.append(
-                            {
-                                "headsign": msg.get("headSign", ""),
-                                "arrival": msg.get("arrivalTimeMessage", ""),
-                                "seconds": seconds,
-                                "line": line,
-                            }
-                        )
+                    trains.append(
+                        {
+                            "headsign": msg.get("headSign", ""),
+                            "arrival": msg.get("arrivalTimeMessage", ""),
+                            "seconds": seconds,
+                            "line": line,
+                        }
+                    )
 
     # Sort results in order of departure time
     trains.sort(key=lambda t: t["seconds"])
