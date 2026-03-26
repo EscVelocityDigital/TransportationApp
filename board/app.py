@@ -19,9 +19,14 @@ BUS_AUTH_URL = f"{BUSDV2_BASE}/authenticateUser"
 # OpenSky API
 OPENSKY_TOKEN_URL = "https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token"
 OPENSKY_STATES_URL = "https://opensky-network.org/api/states/all"
-LOCATION_LAT = 40.72988255549963
-LOCATION_LON = -74.05870460265524
 LOCATION_RADIUS_DEG = 0.072
+
+# Overpass API for bus stop coordinates
+OVERPASS_URL = "https://overpass-api.de/api/interpreter"
+# Pre-seeded stop coordinates (lat, lon) — avoids Overpass lookup on startup
+_stop_location_cache: dict = {
+    "20955": (40.7304331, -74.055736),  # Newark Ave at Chestnut Ave, Jersey City
+}
 
 # AviationStack API
 AVIATIONSTACK_BASE = "http://api.aviationstack.com/v1"
@@ -414,14 +419,35 @@ def get_aircraft_model(icao24: str) -> str:
     return model
 
 
+# Look up NJ Transit bus stop coordinates from OpenStreetMap via Overpass
+def get_stop_location(stop_id: str) -> tuple:
+    if stop_id in _stop_location_cache:
+        return _stop_location_cache[stop_id]
+
+    try:
+        query = f'[out:json];node["highway"="bus_stop"]["ref"="{stop_id}"](39.0,-75.5,41.5,-73.5);out;'
+        r = requests.post(OVERPASS_URL, data={"data": query}, timeout=30)
+        r.raise_for_status()
+        elements = r.json().get("elements", [])
+        if elements:
+            lat = elements[0]["lat"]
+            lon = elements[0]["lon"]
+            _stop_location_cache[stop_id] = (lat, lon)
+            return (lat, lon)
+    except Exception:
+        pass
+
+    return (None, None)
+
+
 # Get flights overhead
-def get_flights_overhead() -> list:
+def get_flights_overhead(lat: float, lon: float) -> list:
     token = get_opensky_token()
     params = {
-        "lamin": LOCATION_LAT - LOCATION_RADIUS_DEG,
-        "lomin": LOCATION_LON - LOCATION_RADIUS_DEG,
-        "lamax": LOCATION_LAT + LOCATION_RADIUS_DEG,
-        "lomax": LOCATION_LON + LOCATION_RADIUS_DEG,
+        "lamin": lat - LOCATION_RADIUS_DEG,
+        "lomin": lon - LOCATION_RADIUS_DEG,
+        "lamax": lat + LOCATION_RADIUS_DEG,
+        "lomax": lon + LOCATION_RADIUS_DEG,
     }
     r = requests.get(
         OPENSKY_STATES_URL,
@@ -521,8 +547,9 @@ def board():
         # train info
         trains = get_trains()
 
-        # flights overhead
-        flights = get_flights_overhead()
+        # flights overhead — centered on the bus stop location
+        lat, lon = get_stop_location(stop)
+        flights = get_flights_overhead(lat, lon) if lat else []
 
         return render_template(
             "board.html",
