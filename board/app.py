@@ -1,4 +1,4 @@
-from flask import Flask, Response, render_template
+from flask import Flask, Response, render_template, request
 import requests
 import os
 import time
@@ -23,9 +23,9 @@ LOCATION_RADIUS_DEG = 0.072
 
 # Overpass API for bus stop coordinates
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
-# Pre-seeded stop coordinates (lat, lon) — avoids Overpass lookup on startup
+# Pre-seeded stop info (lat, lon, name) — avoids Overpass lookup for known stops
 _stop_location_cache: dict = {
-    "20955": (40.7304331, -74.055736),  # Newark Ave at Chestnut Ave, Jersey City
+    "20955": (40.7304331, -74.055736, "Newark Ave at Chestnut Ave"),
 }
 
 # AviationStack API
@@ -423,7 +423,7 @@ def get_aircraft_model(icao24: str) -> str:
     return model
 
 
-# Look up NJ Transit bus stop coordinates from OpenStreetMap via Overpass
+# Look up NJ Transit bus stop info (lat, lon, name) from OpenStreetMap via Overpass
 def get_stop_location(stop_id: str) -> tuple:
     if stop_id in _stop_location_cache:
         return _stop_location_cache[stop_id]
@@ -434,14 +434,17 @@ def get_stop_location(stop_id: str) -> tuple:
         r.raise_for_status()
         elements = r.json().get("elements", [])
         if elements:
-            lat = elements[0]["lat"]
-            lon = elements[0]["lon"]
-            _stop_location_cache[stop_id] = (lat, lon)
-            return (lat, lon)
+            el = elements[0]
+            lat = el["lat"]
+            lon = el["lon"]
+            name = el.get("tags", {}).get("name", "")
+            result = (lat, lon, name)
+            _stop_location_cache[stop_id] = result
+            return result
     except Exception:
         pass
 
-    return (None, None)
+    return (None, None, None)
 
 
 # Get flights overhead
@@ -508,12 +511,15 @@ def get_bus_dv(token: str, route: str, stop: str, direction: str) -> dict:
 @app.route("/")
 def board():
 
-    stop = "20955"
+    stop = request.args.get("stop", "20955").strip()
 
     try:
 
         now = datetime.now().strftime("%I:%M:%S %p")
         refreshed = datetime.now().strftime("%I:%M:%S %p")
+
+        # look up stop name and coordinates
+        lat, lon, stop_name = get_stop_location(stop)
 
         # bus info — empty route/direction returns all buses at the stop
         token = get_bus_token_cached()
@@ -552,7 +558,6 @@ def board():
         trains = get_trains()
 
         # flights overhead — centered on the bus stop location
-        lat, lon = get_stop_location(stop)
         flights = get_flights_overhead(lat, lon) if lat else []
 
         return render_template(
@@ -563,6 +568,8 @@ def board():
             trains=trains,
             flights=flights,
             refresh_seconds=15,
+            stop=stop,
+            stop_name=stop_name or "",
         )
 
     except Exception as e:

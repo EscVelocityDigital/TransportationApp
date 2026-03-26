@@ -46,6 +46,41 @@ h2 {
   padding-bottom: 8px;
 }
 
+.stop-form {
+  display: inline;
+}
+
+.stop-display {
+  font-size: 16px;
+  color: #ccc;
+  letter-spacing: 0;
+}
+
+.stop-input {
+  background: none;
+  border: none;
+  border-bottom: 1px solid #555;
+  color: #ccc;
+  font-family: inherit;
+  font-size: 16px;
+  letter-spacing: 0;
+  width: 70px;
+  outline: none;
+}
+
+.stop-edit-btn, .stop-save-btn {
+  background: none;
+  border: none;
+  color: #555;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 0 4px;
+}
+
+.stop-edit-btn:hover, .stop-save-btn:hover {
+  color: #aaa;
+}
+
 .subtitle {
   font-size: 16px;
   color: #ccc;

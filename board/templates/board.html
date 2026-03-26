@@ -30,7 +30,15 @@
   </script>
 
   <section>
-    <h2>BUSES Departing #20955 &mdash; Newark &amp; Chestnut</h2>
+    <h2>
+      BUSES Departing
+      <form class="stop-form" onsubmit="changeStop(event)">
+        <span class="stop-display" id="stopDisplay">#{{ stop }}{% if stop_name %} &mdash; {{ stop_name }}{% endif %}</span>
+        <input class="stop-input" id="stopInput" type="text" value="{{ stop }}" style="display:none">
+        <button type="button" class="stop-edit-btn" onclick="editStop()">&#9998;</button>
+        <button type="submit" class="stop-save-btn" id="stopSaveBtn" style="display:none">Go</button>
+      </form>
+    </h2>
     {% if buses %}
     <div class="departures">
       {% for b in buses %}
@@ -107,5 +115,19 @@
   </script>
   {% endif %}
 
+  <script>
+    function editStop() {
+      document.getElementById('stopDisplay').style.display = 'none';
+      document.getElementById('stopInput').style.display = 'inline';
+      document.getElementById('stopSaveBtn').style.display = 'inline';
+      document.querySelector('.stop-edit-btn').style.display = 'none';
+      document.getElementById('stopInput').focus();
+    }
+    function changeStop(e) {
+      e.preventDefault();
+      const val = document.getElementById('stopInput').value.trim();
+      if (val) window.location.href = '/?stop=' + encodeURIComponent(val);
+    }
+  </script>
 </body>
 </html>
