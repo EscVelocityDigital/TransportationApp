@@ -8,6 +8,8 @@
 </head>
 <body>
 
+  <a class="settings-link" href="/settings?stop={{ stop }}&path_stop={{ path_stop }}&direction={{ train_direction }}" title="Settings">&#9881;</a>
+
   <div class="clock" id="clock">{{ now }}</div>
   <div class="meta">
     <p>Last refreshed at {{ refreshed }}</p>
@@ -30,11 +32,7 @@
   </script>
 
   <section>
-    <h2>BUSES Departing <span class="stop-display" id="stopDisplay">#{{ stop }}{% if stop_name %} &mdash; {{ stop_name }}{% endif %}</span><button type="button" class="stop-edit-btn" onclick="editStop()">&#9998;</button></h2>
-    <form class="stop-form" onsubmit="changeStop(event)" id="stopForm" style="display:none; margin-bottom: 12px;">
-      <input class="stop-input" id="stopInput" type="text" value="{{ stop }}" placeholder="Stop number">
-      <button type="submit" class="stop-save-btn">Go</button>
-    </form>
+    <h2>BUSES Departing <span class="stop-display">#{{ stop }}{% if stop_name %} &mdash; {{ stop_name }}{% endif %}</span></h2>
     {% if buses %}
     <div class="departures">
       {% for b in buses %}
@@ -50,7 +48,7 @@
   </section>
 
   <section>
-    <h2>TRAINS Departing JSQ</h2>
+    <h2>TRAINS Departing {{ path_stop_name }}</h2>
     {% if trains %}
     <div class="departures">
       {% for t in trains %}
@@ -111,16 +109,5 @@
   </script>
   {% endif %}
 
-  <script>
-    function editStop() {
-      document.getElementById('stopForm').style.display = 'block';
-      document.getElementById('stopInput').focus();
-    }
-    function changeStop(e) {
-      e.preventDefault();
-      const val = document.getElementById('stopInput').value.trim();
-      if (val) window.location.href = '/?stop=' + encodeURIComponent(val);
-    }
-  </script>
 </body>
 </html>

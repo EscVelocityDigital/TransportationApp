@@ -1,4 +1,4 @@
-from flask import Flask, Response, render_template, request
+from flask import Flask, Response, render_template, request, redirect, url_for
 import requests
 import os
 import time
@@ -145,7 +145,7 @@ OPENSKY_TOKEN_TTL_SECONDS = 4 * 60  # tokens expire in 5 min, refresh at 4
 _flight_info_cache: dict = {}  # keyed by callsign -> {data, fetched_at}
 
 # Get train times
-def get_trains():
+def get_trains(station: str = "JSQ", direction: str = "ToNY"):
     r = requests.get(TRAIN_URL, timeout=10)
     r.raise_for_status()
     data = r.json()
@@ -154,12 +154,14 @@ def get_trains():
 
     for item in data.get("results", []):
 
-        # Filter to show only JSQ trains
-        if item.get("consideredStation") == "JSQ":
+        if item.get("consideredStation") == station:
 
             for dest in item.get("destinations", []):
 
-                if dest.get("label") == "ToNJ":
+                dest_label = dest.get("label", "")
+                if direction == "ToNY" and dest_label == "ToNJ":
+                    continue
+                if direction == "ToNJ" and dest_label == "ToNY":
                     continue
 
                 for msg in dest.get("messages", []):
@@ -508,10 +510,27 @@ def get_bus_dv(token: str, route: str, stop: str, direction: str) -> dict:
     return r.json()
 
 
+PATH_STATIONS = [
+    ("JSQ", "Journal Square"),
+    ("GRV", "Grove Street"),
+    ("EXP", "Exchange Place"),
+    ("WTC", "World Trade Center"),
+    ("NWK", "Newark"),
+    ("HAR", "Harrison"),
+    ("HOB", "Hoboken"),
+    ("CHR", "Christopher Street"),
+    ("14S", "14th Street"),
+    ("23S", "23rd Street"),
+    ("33S", "33rd Street"),
+]
+
+
 @app.route("/")
 def board():
 
     stop = request.args.get("stop", "20955").strip()
+    path_stop = request.args.get("path_stop", "JSQ").strip().upper()
+    train_direction = request.args.get("direction", "ToNY").strip()
 
     try:
 
@@ -555,10 +574,12 @@ def board():
         buses.sort(key=bus_sort_key)
 
         # train info
-        trains = get_trains()
+        trains = get_trains(station=path_stop, direction=train_direction)
 
         # flights overhead — centered on the bus stop location
         flights = get_flights_overhead(lat, lon) if lat else []
+
+        path_stop_name = dict(PATH_STATIONS).get(path_stop, path_stop)
 
         return render_template(
             "board.html",
@@ -570,6 +591,9 @@ def board():
             refresh_seconds=15,
             stop=stop,
             stop_name=stop_name or "",
+            path_stop=path_stop,
+            path_stop_name=path_stop_name,
+            train_direction=train_direction,
         )
 
     except Exception as e:
@@ -578,6 +602,22 @@ def board():
             mimetype="text/plain",
             status=500,
         )
+
+
+@app.route("/settings")
+def settings():
+    stop = request.args.get("stop", "20955")
+    path_stop = request.args.get("path_stop", "JSQ").upper()
+    train_direction = request.args.get("direction", "ToNY")
+    _, _, stop_name = get_stop_location(stop)
+    return render_template(
+        "settings.html",
+        stop=stop,
+        stop_name=stop_name or "",
+        path_stop=path_stop,
+        train_direction=train_direction,
+        path_stations=PATH_STATIONS,
+    )
 
 
 if __name__ == "__main__":

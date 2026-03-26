@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+<head>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings</title>
+</head>
+<body>
+
+  <a class="settings-link" href="/" title="Back to board">&#8592;</a>
+
+  <h1 class="settings-title">Settings</h1>
+
+  <form class="settings-form" action="/" method="get">
+
+    <div class="settings-group">
+      <label for="stop">Bus Stop Number</label>
+      <input id="stop" name="stop" type="text" value="{{ stop }}" placeholder="e.g. 20955">
+      {% if stop_name %}<p class="settings-hint">{{ stop_name }}</p>{% endif %}
+    </div>
+
+    <div class="settings-group">
+      <label for="path_stop">PATH Station</label>
+      <select id="path_stop" name="path_stop">
+        {% for code, name in path_stations %}
+        <option value="{{ code }}"{% if code == path_stop %} selected{% endif %}>{{ name }} ({{ code }})</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="settings-group">
+      <label for="direction">Train Direction</label>
+      <select id="direction" name="direction">
+        <option value="ToNY"{% if train_direction == "ToNY" %} selected{% endif %}>To New York</option>
+        <option value="ToNJ"{% if train_direction == "ToNJ" %} selected{% endif %}>To New Jersey</option>
+        <option value="both"{% if train_direction == "both" %} selected{% endif %}>Both</option>
+      </select>
+    </div>
+
+    <button type="submit" class="settings-save-btn">Save</button>
+
+  </form>
+
+</body>
+</html>

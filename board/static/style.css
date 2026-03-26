@@ -46,39 +46,95 @@ h2 {
   padding-bottom: 8px;
 }
 
-.stop-form {
-  display: inline;
-}
-
 .stop-display {
   font-size: 16px;
   color: #ccc;
   letter-spacing: 0;
 }
 
-.stop-input {
-  background: none;
-  border: none;
-  border-bottom: 1px solid #555;
-  color: #ccc;
+.settings-link {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  font-size: 22px;
+  color: #555;
+  text-decoration: none;
+  line-height: 1;
+}
+
+.settings-link:hover {
+  color: #aaa;
+}
+
+.settings-title {
+  font-size: 14px;
+  letter-spacing: 3px;
+  color: #999;
+  font-weight: normal;
+  margin: 0 0 40px 0;
+}
+
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  max-width: 400px;
+}
+
+.settings-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.settings-group label {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #777;
+  text-transform: uppercase;
+}
+
+.settings-group input,
+.settings-group select {
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 4px;
+  color: #e0e0e0;
   font-family: inherit;
   font-size: 16px;
-  letter-spacing: 0;
-  width: 70px;
+  padding: 8px 10px;
   outline: none;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.stop-edit-btn, .stop-save-btn {
-  background: none;
-  border: none;
-  color: #555;
-  cursor: pointer;
+.settings-group input:focus,
+.settings-group select:focus {
+  border-color: #666;
+}
+
+.settings-hint {
   font-size: 13px;
-  padding: 0 4px;
+  color: #555;
+  margin: 0;
 }
 
-.stop-edit-btn:hover, .stop-save-btn:hover {
-  color: #aaa;
+.settings-save-btn {
+  background: #222;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #e0e0e0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  letter-spacing: 1px;
+  padding: 10px 24px;
+  align-self: flex-start;
+}
+
+.settings-save-btn:hover {
+  border-color: #888;
+  color: #fff;
 }
 
 .subtitle {
