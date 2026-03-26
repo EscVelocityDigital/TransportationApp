@@ -40,6 +40,8 @@ _aircraft_meta_cache: dict = {}  # keyed by icao24
 # ICAO -> IATA airline code mapping for common carriers near EWR/JFK/LGA
 ICAO_TO_IATA = {
     "AAL": "AA",  # American
+    "ACA": "AC",  # Air Canada
+    "TAP": "TP",  # TAP Air Portugal
     "AFR": "AF",  # Air France
     "AMX": "AM",  # Aeromexico
     "ASA": "AS",  # Alaska
@@ -87,6 +89,8 @@ ICAO_TO_IATA = {
 # IATA airline code -> airline name
 IATA_TO_AIRLINE = {
     "AA": "American Airlines",
+    "AC": "Air Canada",
+    "TP": "TAP Air Portugal",
     "AF": "Air France",
     "AM": "Aeromexico",
     "AS": "Alaska Airlines",
