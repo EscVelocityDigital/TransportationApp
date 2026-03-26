@@ -401,21 +401,8 @@ def get_flights_overhead() -> list:
         callsign = (flight.get("callsign") or "").strip()
         if not callsign:
             continue
-
-        av = get_aviationstack_flight(callsign)
-        flight["airline"] = (av.get("airline") or {}).get("name", "")
-        flight["airline_iata"] = (av.get("airline") or {}).get("iata", "")
-        flight["flight_iata"] = (av.get("flight") or {}).get("iata", "")
-        flight["departure_airport"] = (av.get("departure") or {}).get("airport", "")
-        flight["departure_iata"] = (av.get("departure") or {}).get("iata", "")
-        flight["arrival_airport"] = (av.get("arrival") or {}).get("airport", "")
-        flight["arrival_iata"] = (av.get("arrival") or {}).get("iata", "")
+        flight["callsign"] = callsign
         flight["aircraft"] = get_aircraft_model(flight.get("icao24", ""))
-
-        # Skip flights with no AviationStack data
-        if not flight["airline"]:
-            continue
-
         flights.append(flight)
 
     return flights

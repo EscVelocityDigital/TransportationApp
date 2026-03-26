@@ -117,14 +117,36 @@ table.flights td {
   color: #e0e0e0;
 }
 
-td.airline-logo {
-  padding: 4px 8px;
-  width: 54px;
+.hidden {
+  display: none;
 }
 
-td.airline-logo img {
-  display: block;
-  width: 40px;
-  height: 40px;
-  object-fit: contain;
+.flight-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid #444;
+  border-radius: 999px;
+  color: #aaa;
+  font-size: 16px;
+  padding: 6px 14px;
+  cursor: pointer;
+  margin-bottom: 24px;
+}
+
+.flight-toggle:hover {
+  border-color: #888;
+  color: #e0e0e0;
+}
+
+.flight-toggle.active {
+  border-color: #e0e0e0;
+  color: #e0e0e0;
+}
+
+.flight-count {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: inherit;
 }
