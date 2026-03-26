@@ -66,11 +66,11 @@ h2 {
 }
 
 .status {
-  font-size: 11px;
-  letter-spacing: 1px;
-  color: #aaa;
+  /*font-size: 11px;
+  letter-spacing: 1px;*/
+  /*color: #aaa;*/
   min-width: 100px;
-  text-transform: uppercase;
+  /*text-transform: uppercase;*/
 }
 
 
