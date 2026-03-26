@@ -106,8 +106,6 @@ def get_trains():
 
             for dest in item.get("destinations", []):
 
-                direction = dest.get("label", "")
-
                 for msg in dest.get("messages", []):
                     seconds_raw = msg.get("secondsToArrival")
                     try:
@@ -123,7 +121,6 @@ def get_trains():
                             "arrival": msg.get("arrivalTimeMessage", ""),
                             "seconds": seconds,
                             "line": line,
-                            "direction": direction,
                         }
                     )
 
