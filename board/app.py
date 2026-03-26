@@ -106,7 +106,8 @@ def get_trains():
 
             for dest in item.get("destinations", []):
 
-                direction = dest.get("label", "")
+                if dest.get("label") == "ToNWK":
+                    continue
 
                 for msg in dest.get("messages", []):
                     seconds_raw = msg.get("secondsToArrival")
@@ -115,14 +116,15 @@ def get_trains():
                     except (TypeError, ValueError):
                         seconds = 999999
 
-                    line = (msg.get("lineColor") or "").strip()
+                    headsign = msg.get("headSign", "")
+                    line = "FF9900" if "33" in headsign else (msg.get("lineColor") or "").strip()
 
                     trains.append(
                         {
-                            "headsign": msg.get("headSign", ""),
+                            "headsign": headsign,
                             "arrival": msg.get("arrivalTimeMessage", ""),
                             "seconds": seconds,
-                            "line": "4D92FB" if direction == "ToNWK" else line,
+                            "line": line,
                         }
                     )
 
