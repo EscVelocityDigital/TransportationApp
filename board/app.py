@@ -456,6 +456,28 @@ def board():
             for row in data.get("DVTrip", [])
         ]
 
+        def bus_sort_key(b):
+            status = b["status"].strip().lower()
+            # "in X mins" or "in 1 min"
+            if status.startswith("in "):
+                try:
+                    return int(status.split()[1])
+                except (IndexError, ValueError):
+                    pass
+            # clock time like "11:32 PM"
+            try:
+                t = datetime.strptime(status.upper(), "%I:%M %p")
+                now_dt = datetime.now()
+                candidate = now_dt.replace(hour=t.hour, minute=t.minute, second=0, microsecond=0)
+                if candidate < now_dt:
+                    candidate = candidate.replace(day=candidate.day + 1)
+                return int((candidate - now_dt).total_seconds() / 60)
+            except ValueError:
+                pass
+            return 9999
+
+        buses.sort(key=bus_sort_key)
+
         # train info
         trains = get_trains()
 
