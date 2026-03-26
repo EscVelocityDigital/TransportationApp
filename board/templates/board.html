@@ -30,15 +30,11 @@
   </script>
 
   <section>
-    <h2>
-      BUSES Departing
-      <form class="stop-form" onsubmit="changeStop(event)">
-        <span class="stop-display" id="stopDisplay">#{{ stop }}{% if stop_name %} &mdash; {{ stop_name }}{% endif %}</span>
-        <input class="stop-input" id="stopInput" type="text" value="{{ stop }}" style="display:none">
-        <button type="button" class="stop-edit-btn" onclick="editStop()">&#9998;</button>
-        <button type="submit" class="stop-save-btn" id="stopSaveBtn" style="display:none">Go</button>
-      </form>
-    </h2>
+    <h2>BUSES Departing <span class="stop-display" id="stopDisplay">#{{ stop }}{% if stop_name %} &mdash; {{ stop_name }}{% endif %}</span><button type="button" class="stop-edit-btn" onclick="editStop()">&#9998;</button></h2>
+    <form class="stop-form" onsubmit="changeStop(event)" id="stopForm" style="display:none; margin-bottom: 12px;">
+      <input class="stop-input" id="stopInput" type="text" value="{{ stop }}" placeholder="Stop number">
+      <button type="submit" class="stop-save-btn">Go</button>
+    </form>
     {% if buses %}
     <div class="departures">
       {% for b in buses %}
@@ -117,10 +113,7 @@
 
   <script>
     function editStop() {
-      document.getElementById('stopDisplay').style.display = 'none';
-      document.getElementById('stopInput').style.display = 'inline';
-      document.getElementById('stopSaveBtn').style.display = 'inline';
-      document.querySelector('.stop-edit-btn').style.display = 'none';
+      document.getElementById('stopForm').style.display = 'block';
       document.getElementById('stopInput').focus();
     }
     function changeStop(e) {
