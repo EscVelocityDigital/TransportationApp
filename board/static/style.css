@@ -94,6 +94,10 @@ h2 {
   /* color set inline per train line */
 }
 
+.to-newark {
+  opacity: 0.5;
+}
+
 .none {
   color: #777;
   margin: 0;

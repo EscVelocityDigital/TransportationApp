@@ -51,7 +51,7 @@
     {% if trains %}
     <div class="departures">
       {% for t in trains %}
-      <div class="row">
+      <div class="row {% if t.direction == 'ToNWK' %}to-newark{% endif %}">
         <span class="time">{{ t.arrival }}</span>
         <span class="headsign" style="color: #{{ t.line }};">{{ t.headsign }}</span>
       </div>
