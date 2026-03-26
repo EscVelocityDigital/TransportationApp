@@ -106,6 +106,8 @@ def get_trains():
 
             for dest in item.get("destinations", []):
 
+                direction = dest.get("label", "")
+
                 for msg in dest.get("messages", []):
                     seconds_raw = msg.get("secondsToArrival")
                     try:
@@ -120,7 +122,7 @@ def get_trains():
                             "headsign": msg.get("headSign", ""),
                             "arrival": msg.get("arrivalTimeMessage", ""),
                             "seconds": seconds,
-                            "line": line,
+                            "line": "4D92FB" if direction == "ToNWK" else line,
                         }
                     )
 
