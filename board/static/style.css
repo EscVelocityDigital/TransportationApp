@@ -139,14 +139,3 @@ table.flights td {
   border-color: #888;
   color: #e0e0e0;
 }
-
-.flight-toggle.active {
-  border-color: #e0e0e0;
-  color: #e0e0e0;
-}
-
-.flight-count {
-  font-size: 11px;
-  letter-spacing: 1px;
-  color: inherit;
-}

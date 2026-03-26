@@ -62,10 +62,7 @@
   </section>
 
   {% if flights %}
-  <button class="flight-toggle" id="flightToggle" onclick="toggleFlights()" title="Flights overhead">
-    ✈
-    <span class="flight-count">{{ flights|length }}</span>
-  </button>
+  <button class="flight-toggle" id="flightToggle" onclick="toggleFlights()" title="Flights overhead">✈</button>
 
   <section id="flightSection" class="hidden">
     <h2>FLIGHTS Overhead</h2>
@@ -92,9 +89,12 @@
   <script>
     function toggleFlights() {
       const section = document.getElementById('flightSection');
-      const btn = document.getElementById('flightToggle');
-      section.classList.toggle('hidden');
-      btn.classList.toggle('active');
+      const isHidden = section.classList.toggle('hidden');
+      localStorage.setItem('flightsOpen', !isHidden);
+    }
+
+    if (localStorage.getItem('flightsOpen') === 'true') {
+      document.getElementById('flightSection').classList.remove('hidden');
     }
   </script>
   {% endif %}
