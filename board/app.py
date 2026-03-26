@@ -553,6 +553,8 @@ def board():
 
         def bus_sort_key(b):
             status = b["status"].strip().lower()
+            if status == "all aboard":
+                return 0
             # "in X mins" or "in 1 min"
             if status.startswith("in "):
                 try:
