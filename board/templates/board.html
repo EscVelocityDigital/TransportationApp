@@ -10,8 +10,7 @@
 
   <div class="clock" id="clock">{{ now }}</div>
   <div class="meta">
-    <p>The current time is <span id="current-time">{{ now }}</span></p>
-    <p>Bus, train, and flight times last refreshed at {{ refreshed }}</p>
+    <p>Last refreshed at {{ refreshed }}</p>
   </div>
 
   <script>
@@ -31,7 +30,7 @@
   </script>
 
   <section>
-    <h2>BUSES <span class="subtitle">Stop 20955 &mdash; Newark &amp; Chestnut</span></h2>
+    <h2>BUSES Departing #20955 &mdash; Newark &amp; Chestnut</h2>
     {% if buses %}
     <div class="departures">
       {% for b in buses %}
@@ -47,7 +46,7 @@
   </section>
 
   <section>
-    <h2>TRAINS <span class="subtitle">Departing from JSQ</span></h2>
+    <h2>TRAINS Departing JSQ</h2>
     {% if trains %}
     <div class="departures">
       {% for t in trains %}
@@ -64,7 +63,7 @@
 
   {% if flights %}
   <section>
-    <h2>FLIGHTS <span class="subtitle">Overhead (~5 mile radius)</span></h2>
+    <h2>FLIGHTS Overhead</h2>
     <table class="flights">
       <thead>
         <tr>
