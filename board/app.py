@@ -438,31 +438,22 @@ def get_bus_dv(token: str, route: str, stop: str, direction: str) -> dict:
 def board():
 
     stop = "20955"
-    direction = "Exchange Place"
-    routes = ["80", "86"]
 
     try:
 
         now = datetime.now().strftime("%I:%M:%S %p")
         refreshed = datetime.now().strftime("%I:%M:%S %p")
 
-        # bus info
+        # bus info — empty route/direction returns all buses at the stop
         token = get_bus_token_cached()
-        buses = []
-
-        for route in routes:
-            data = get_bus_dv(
-                token,
-                route=route,
-                stop=stop,
-                direction=direction
-            )
-
-            for row in data.get("DVTrip", []):
-                buses.append({
-                    "status": row.get("departurestatus", ""),
-                    "header": row.get("header", ""),
-                })
+        data = get_bus_dv(token, route="", stop=stop, direction="")
+        buses = [
+            {
+                "status": row.get("departurestatus", ""),
+                "header": row.get("header", ""),
+            }
+            for row in data.get("DVTrip", [])
+        ]
 
         # train info
         trains = get_trains()
