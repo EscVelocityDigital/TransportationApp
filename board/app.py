@@ -79,6 +79,50 @@ ICAO_TO_IATA = {
     "VIR": "VS",  # Virgin Atlantic
 }
 
+# IATA airline code -> airline name
+IATA_TO_AIRLINE = {
+    "AA": "American Airlines",
+    "AF": "Air France",
+    "AM": "Aeromexico",
+    "AS": "Alaska Airlines",
+    "B6": "JetBlue",
+    "BA": "British Airways",
+    "BW": "Caribbean Airlines",
+    "CI": "China Airlines",
+    "CV": "Cargolux",
+    "CX": "Cathay Pacific",
+    "DL": "Delta Air Lines",
+    "EI": "Aer Lingus",
+    "EJ": "NetJets",
+    "ET": "Ethiopian Airlines",
+    "EW": "Eurowings",
+    "EY": "Etihad Airways",
+    "F9": "Frontier Airlines",
+    "FX": "FedEx",
+    "GT": "Atlas Air",
+    "HA": "Hawaiian Airlines",
+    "IB": "Iberia",
+    "KE": "Korean Air",
+    "KL": "KLM",
+    "KS": "PSA Airlines",
+    "LH": "Lufthansa",
+    "LX": "Swiss",
+    "MQ": "American Eagle",
+    "NK": "Spirit Airlines",
+    "OE": "Piedmont Airlines",
+    "OO": "SkyWest Airlines",
+    "OS": "Austrian Airlines",
+    "QR": "Qatar Airways",
+    "QX": "Horizon Air",
+    "5X": "UPS",
+    "TK": "Turkish Airlines",
+    "UA": "United Airlines",
+    "VS": "Virgin Atlantic",
+    "WN": "Southwest Airlines",
+    "XJ": "Flexjet",
+    "YX": "Republic Airways",
+}
+
 _token_lock = Lock()
 _cached_token = None
 _cached_token_time = 0.0
@@ -402,6 +446,15 @@ def get_flights_overhead() -> list:
         if not callsign:
             continue
         flight["callsign"] = callsign
+
+        # Derive IATA flight number and airline from ICAO callsign
+        icao_prefix = callsign[:3].upper()
+        flight_number = callsign[3:]
+        iata_code = ICAO_TO_IATA.get(icao_prefix, "")
+        flight["flight_iata"] = f"{iata_code}{flight_number}" if iata_code else ""
+        flight["airline"] = IATA_TO_AIRLINE.get(iata_code, "")
+        flight["airline_iata"] = iata_code
+
         flight["aircraft"] = get_aircraft_model(flight.get("icao24", ""))
         flights.append(flight)
 

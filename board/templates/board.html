@@ -69,7 +69,9 @@
     <table class="flights">
       <thead>
         <tr>
-          <th>Callsign</th>
+          <th></th>
+          <th>Flight</th>
+          <th>Airline</th>
           <th>Aircraft</th>
           <th>Altitude (m)</th>
         </tr>
@@ -77,7 +79,13 @@
       <tbody>
         {% for f in flights %}
         <tr>
-          <td>{{ f.callsign or '—' }}</td>
+          <td class="airline-logo">
+            {% if f.airline_iata %}
+            <img src="https://pics.avs.io/50/50/{{ f.airline_iata }}.png" alt="{{ f.airline }}" title="{{ f.airline }}">
+            {% endif %}
+          </td>
+          <td>{{ f.flight_iata or f.callsign or '—' }}</td>
+          <td>{{ f.airline or '—' }}</td>
           <td>{{ f.aircraft or '—' }}</td>
           <td>{{ f.baro_altitude if f.baro_altitude is not none else '—' }}</td>
         </tr>

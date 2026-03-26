@@ -121,6 +121,18 @@ table.flights td {
   display: none;
 }
 
+td.airline-logo {
+  padding: 4px 8px;
+  width: 54px;
+}
+
+td.airline-logo img {
+  display: block;
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
 .flight-toggle {
   display: inline-flex;
   align-items: center;
