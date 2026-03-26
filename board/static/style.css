@@ -137,6 +137,107 @@ h2 {
   color: #fff;
 }
 
+.mode-picker {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 32px;
+}
+
+.mode-btn {
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 4px;
+  color: #777;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 14px;
+  padding: 10px 18px;
+  flex: 1;
+  text-align: left;
+}
+
+.mode-btn.active {
+  border-color: #666;
+  color: #e0e0e0;
+}
+
+.mode-btn:hover {
+  border-color: #555;
+  color: #ccc;
+}
+
+.locate-btn {
+  background: #1a1a1a;
+  border: 1px solid #444;
+  border-radius: 4px;
+  color: #e0e0e0;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 15px;
+  padding: 10px 20px;
+}
+
+.locate-btn:hover {
+  border-color: #888;
+}
+
+.locate-btn:disabled {
+  color: #555;
+  border-color: #333;
+  cursor: default;
+}
+
+.locate-section-label {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #777;
+  text-transform: uppercase;
+  margin: 0 0 10px 0;
+}
+
+.path-suggestion {
+  color: #e0e0e0;
+  font-size: 16px;
+  margin: 0;
+}
+
+.stop-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 480px;
+}
+
+.stop-row {
+  display: flex;
+  gap: 16px;
+  align-items: baseline;
+  padding: 8px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.stop-row:hover {
+  background: #1a1a1a;
+}
+
+.stop-row.selected {
+  border-color: #555;
+  background: #1a1a1a;
+}
+
+.stop-row-ref {
+  color: #777;
+  font-size: 13px;
+  min-width: 48px;
+}
+
+.stop-row-name {
+  color: #e0e0e0;
+  font-size: 15px;
+}
+
 .subtitle {
   font-size: 16px;
   color: #ccc;

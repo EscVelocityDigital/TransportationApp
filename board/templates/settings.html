@@ -11,35 +11,176 @@
 
   <h1 class="settings-title">Settings</h1>
 
-  <form class="settings-form" action="/" method="get">
+  <!-- Mode picker -->
+  <div class="mode-picker">
+    <button type="button" class="mode-btn active" id="btnLocation" onclick="setMode('location')">&#128205; Find using my location</button>
+    <button type="button" class="mode-btn" id="btnManual" onclick="setMode('manual')">&#9998; Let me choose</button>
+  </div>
 
-    <div class="settings-group">
-      <label for="stop">Bus Stop Number</label>
-      <input id="stop" name="stop" type="text" value="{{ stop }}" placeholder="e.g. 20955">
-      {% if stop_name %}<p class="settings-hint">{{ stop_name }}</p>{% endif %}
+  <!-- Location mode -->
+  <div id="locationMode">
+    <button type="button" class="locate-btn" id="locateBtn" onclick="locate()">Detect my location</button>
+    <p class="settings-hint" id="locateStatus"></p>
+
+    <div id="stopResults" style="display:none">
+      <p class="locate-section-label">Nearby bus stops</p>
+      <div class="stop-list" id="stopList"></div>
+
+      <p class="locate-section-label" style="margin-top:24px">Nearest PATH station</p>
+      <p class="path-suggestion" id="pathSuggestion"></p>
     </div>
 
-    <div class="settings-group">
-      <label for="path_stop">PATH Station</label>
-      <select id="path_stop" name="path_stop">
-        {% for code, name in path_stations %}
-        <option value="{{ code }}"{% if code == path_stop %} selected{% endif %}>{{ name }} ({{ code }})</option>
-        {% endfor %}
-      </select>
-    </div>
+    <form id="locationForm" action="/" method="get" style="display:none; margin-top:28px">
+      <input type="hidden" name="stop" id="locStop">
+      <input type="hidden" name="path_stop" id="locPathStop">
+      <input type="hidden" name="direction" value="{{ train_direction }}">
+      <button type="submit" class="settings-save-btn">Save</button>
+    </form>
+  </div>
 
-    <div class="settings-group">
-      <label for="direction">Train Direction</label>
-      <select id="direction" name="direction">
-        <option value="ToNY"{% if train_direction == "ToNY" %} selected{% endif %}>To New York</option>
-        <option value="ToNJ"{% if train_direction == "ToNJ" %} selected{% endif %}>To New Jersey</option>
-        <option value="both"{% if train_direction == "both" %} selected{% endif %}>Both</option>
-      </select>
-    </div>
+  <!-- Manual mode -->
+  <div id="manualMode" style="display:none">
+    <form class="settings-form" action="/" method="get">
 
-    <button type="submit" class="settings-save-btn">Save</button>
+      <div class="settings-group">
+        <label for="stop">Bus Stop Number</label>
+        <input id="stop" name="stop" type="text" value="{{ stop }}" placeholder="e.g. 20955">
+        {% if stop_name %}<p class="settings-hint">{{ stop_name }}</p>{% endif %}
+      </div>
 
-  </form>
+      <div class="settings-group">
+        <label for="path_stop">PATH Station</label>
+        <select id="path_stop" name="path_stop">
+          {% for code, name in path_stations %}
+          <option value="{{ code }}"{% if code == path_stop %} selected{% endif %}>{{ name }} ({{ code }})</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="settings-group">
+        <label for="direction">Train Direction</label>
+        <select id="direction" name="direction">
+          <option value="ToNY"{% if train_direction == "ToNY" %} selected{% endif %}>To New York</option>
+          <option value="ToNJ"{% if train_direction == "ToNJ" %} selected{% endif %}>To New Jersey</option>
+          <option value="both"{% if train_direction == "both" %} selected{% endif %}>Both</option>
+        </select>
+      </div>
+
+      <button type="submit" class="settings-save-btn">Save</button>
+
+    </form>
+  </div>
+
+  <script>
+    // PATH station coordinates for nearest-station calculation
+    const PATH_STATIONS = [
+      { code: "JSQ", name: "Journal Square",    lat: 40.7328, lon: -74.0658 },
+      { code: "GRV", name: "Grove Street",      lat: 40.7197, lon: -74.0435 },
+      { code: "EXP", name: "Exchange Place",    lat: 40.7166, lon: -74.0341 },
+      { code: "WTC", name: "World Trade Center",lat: 40.7128, lon: -74.0128 },
+      { code: "NWK", name: "Newark",            lat: 40.7354, lon: -74.1636 },
+      { code: "HAR", name: "Harrison",          lat: 40.7451, lon: -74.1557 },
+      { code: "HOB", name: "Hoboken",           lat: 40.7358, lon: -74.0280 },
+      { code: "CHR", name: "Christopher Street",lat: 40.7332, lon: -74.0027 },
+      { code: "14S", name: "14th Street",       lat: 40.7377, lon: -74.0028 },
+      { code: "23S", name: "23rd Street",       lat: 40.7424, lon: -73.9927 },
+      { code: "33S", name: "33rd Street",       lat: 40.7496, lon: -73.9914 },
+    ];
+
+    function setMode(mode) {
+      document.getElementById('locationMode').style.display = mode === 'location' ? '' : 'none';
+      document.getElementById('manualMode').style.display   = mode === 'manual'   ? '' : 'none';
+      document.getElementById('btnLocation').classList.toggle('active', mode === 'location');
+      document.getElementById('btnManual').classList.toggle('active', mode === 'manual');
+    }
+
+    function dist(lat1, lon1, lat2, lon2) {
+      const dx = lat1 - lat2, dy = lon1 - lon2;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function nearestPath(lat, lon) {
+      return PATH_STATIONS.reduce((best, s) =>
+        dist(lat, lon, s.lat, s.lon) < dist(lat, lon, best.lat, best.lon) ? s : best
+      );
+    }
+
+    function locate() {
+      const status = document.getElementById('locateStatus');
+      const btn = document.getElementById('locateBtn');
+      if (!navigator.geolocation) {
+        status.textContent = 'Geolocation is not supported by this browser.';
+        return;
+      }
+      status.textContent = 'Locating…';
+      btn.disabled = true;
+      navigator.geolocation.getCurrentPosition(onPosition, onError, { timeout: 10000 });
+    }
+
+    function onPosition(pos) {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      document.getElementById('locateStatus').textContent = `Location found. Searching for nearby stops…`;
+      fetchNearbyStops(lat, lon);
+    }
+
+    function onError(err) {
+      document.getElementById('locateStatus').textContent = 'Could not get location: ' + err.message;
+      document.getElementById('locateBtn').disabled = false;
+    }
+
+    function fetchNearbyStops(lat, lon) {
+      const query = `[out:json];node["highway"="bus_stop"]["ref"](around:600,${lat},${lon});out;`;
+      fetch('https://overpass-api.de/api/interpreter', {
+        method: 'POST',
+        body: 'data=' + encodeURIComponent(query),
+      })
+      .then(r => r.json())
+      .then(data => showResults(lat, lon, data.elements || []))
+      .catch(() => {
+        document.getElementById('locateStatus').textContent = 'Could not fetch nearby stops. Try again or enter manually.';
+        document.getElementById('locateBtn').disabled = false;
+      });
+    }
+
+    function showResults(lat, lon, stops) {
+      document.getElementById('locateStatus').textContent = '';
+
+      const path = nearestPath(lat, lon);
+      document.getElementById('pathSuggestion').textContent = `${path.name} (${path.code})`;
+      document.getElementById('locPathStop').value = path.code;
+
+      const list = document.getElementById('stopList');
+      list.innerHTML = '';
+
+      if (stops.length === 0) {
+        list.innerHTML = '<p class="settings-hint">No NJ Transit stops found within 600m.</p>';
+      } else {
+        // Sort by distance
+        stops.sort((a, b) => dist(lat, lon, a.lat, a.lon) - dist(lat, lon, b.lat, b.lon));
+        stops.slice(0, 10).forEach((s, i) => {
+          const ref  = s.tags && s.tags.ref  ? s.tags.ref  : '';
+          const name = s.tags && s.tags.name ? s.tags.name : ref || 'Unknown stop';
+          const row = document.createElement('div');
+          row.className = 'stop-row';
+          row.dataset.ref = ref;
+          row.innerHTML = `<span class="stop-row-ref">${ref}</span><span class="stop-row-name">${name}</span>`;
+          row.onclick = () => selectStop(ref, row);
+          list.appendChild(row);
+          if (i === 0) selectStop(ref, row);
+        });
+      }
+
+      document.getElementById('stopResults').style.display = '';
+      document.getElementById('locationForm').style.display = '';
+    }
+
+    function selectStop(ref, row) {
+      document.querySelectorAll('.stop-row').forEach(r => r.classList.remove('selected'));
+      row.classList.add('selected');
+      document.getElementById('locStop').value = ref;
+    }
+  </script>
 
 </body>
 </html>
